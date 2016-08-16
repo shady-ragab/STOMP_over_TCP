@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello WebSocket</title>
+    <script src="sockjs-0.3.4.js"></script>
+    <script src="stomp.js"></script>
+    <script type="text/javascript">
+        var stompClient = null;
+        var clientID = new Date().getTime();
+        
+        
+        function setConnected(connected) {
+            document.getElementById('connect').disabled = connected;
+            document.getElementById('disconnect').disabled = !connected;
+            document.getElementById('conversationDiv').style.visibility = connected ? 'visible' : 'hidden';
+            document.getElementById('response').innerHTML = '';
+        }
+        
+        function connect() {
+            //var socket = new SockJS('http:/localhost:8080/hello');
+            
+            var request = new XMLHttpRequest();
+var path="http://192.168.1.155:8080/greeting";
+request.onreadystatechange=state_change;
+
+request.open("GET", path, false);
+//request.setRequestHeader("Referer", "http://www.google.com");
+//request.setRequestHeader("User-Agent", "Mozilla/5.0");
+request.setRequestHeader("Authorization","Basic " + btoa("user" + ":" + "123"));
+//request.setRequestHeader("Content-Type","text/plain");
+
+request.send(null);
+
+function state_change()
+{
+if (request.readyState==4)
+  {// 4 = "loaded"
+  if (request.status==200)
+    {// 200 = OK
+    // ...our code here...
+    alert('ok');
+    }
+  else
+    {
+    alert("Problem retrieving XML data");
+    }
+  }
+}
+            
+            
+            var socket = new SockJS('http://192.168.1.155:8080/hello');
+            stompClient = Stomp.over(socket); 
+            
+            var headers = {
+            	      'login': 'mylogin',
+            	      'passcode': 'mypasscode',
+            	      // additional header
+            	      'client-id': 'my-client-id'
+            	    };
+            
+            
+            stompClient.connect(headers, function(frame) {
+                setConnected(true);
+                console.log('Connected: ' + frame);
+               /* stompClient.subscribe('/topic/greetings1', function(greeting){
+                    showGreeting(JSON.parse(greeting.body).content);
+                });*/
+                /*stompClient.subscribe('/queue/greetings1', function(greeting){
+                    showGreeting(JSON.parse(greeting.body).content);
+                });*/
+                stompClient.subscribe('/user/queue/greetings1', function(greeting){
+                    showGreeting(JSON.parse(greeting.body).content);
+                });
+            });
+        }
+        
+        function disconnect() {
+            if (stompClient != null) {
+                stompClient.disconnect();
+            }
+            setConnected(false);
+            console.log("Disconnected");
+        }
+        
+        function sendName() {
+            var name = document.getElementById('name').value;
+            stompClient.send("/app/hello", {}, JSON.stringify({ 'name': name , 'clientID': clientID}));
+        }
+        
+        function showGreeting(message) {
+            var response = document.getElementById('response');
+            var p = document.createElement('p');
+            p.style.wordWrap = 'break-word';
+            p.appendChild(document.createTextNode(message));
+            response.appendChild(p);
+        }
+    </script>
+</head>
+<body onload="disconnect()">
+<noscript><h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websocket relies on Javascript being enabled. Please enable
+    Javascript and reload this page!</h2></noscript>
+<div>
+    <div>
+        <button id="connect" onclick="connect();">Connect</button>
+        <button id="disconnect" disabled="disabled" onclick="disconnect();">Disconnect</button>
+    </div>
+    <div id="conversationDiv">
+        <label>What is your name?</label><input type="text" id="name" />
+        <button id="sendName" onclick="sendName();">Send</button>
+        <p id="response"></p>
+    </div>
+</div>
+</body>
+</html>
