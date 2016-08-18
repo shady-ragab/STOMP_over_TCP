@@ -72,12 +72,15 @@
             return print;
         };
       // Stomp.js boilerplate
-      if (location.search == '?ws') {
-          var client = Stomp.client('ws://' + window.location.hostname + ':15674/ws');
+    /*  if (location.search == '?wss') {
+          var client = Stomp.client('wss://' + window.location.hostname + ':15671/ws');
       } else {
-          var ws = new SockJS('http://' + window.location.hostname + ':15674/stomp');
+          var ws = new SockJS('https://' + window.location.hostname + ':15671/stomp');
           var client = Stomp.over(ws);
-      }
+      }*/
+      //use this url for first time to download the certificate "https://localhost:15671/stomp"
+      var ws = new SockJS('https://' + window.location.hostname + ':15671/stomp');
+      var client = Stomp.over(ws);
       client.debug = pipe('#second');
       var print_first = pipe('#first', function(data) {
     	  //client.send('/topic/test', {"content-type":"text/plain"}, data);
